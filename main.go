@@ -74,7 +74,7 @@ func listCommands() {
 	// This would let you put commands in subdirs as well as same dir as exec
 	// (Good for testing, organising)
 	for i := 0; i < len(commands); i++ {
-		if fileExistsAndIsExecutable(commands[i]) {
+		if canUseCommandFile(commands[i]) {
 			printCommandInfo(commands[i], magicPrefix)
 		}
 	}
@@ -87,17 +87,28 @@ func listCommands() {
 
 func testForCommand(commandName string) bool {
 	filename := filepath.Join(magicPath, magicPrefix+"-"+commandName)
-	return fileExistsAndIsExecutable(filename)
+	return canUseCommandFile(filename)
 }
 
-func fileExistsAndIsExecutable(filename string) bool {
+func canUseCommandFile(filename string) bool {
 	info, _ := os.Stat(filename)
+
+	// Can we stat it?
 	if info != nil {
 		mode := info.Mode()
-		return (mode & 0111) != 0
+		// Can we read it?
+		canRead := bool((mode & 0444) != 0)
+
+		// Can we execute it?
+		canExec := bool((mode & 0111) != 0)
+
+		if canRead && canExec {
+			return true
+		}
 	} else {
 		return false
 	}
+	return false
 }
 
 func printCommandInfo(filename string, execBasename string) {
