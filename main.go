@@ -135,17 +135,16 @@ func printCommandInfo(filename string, execBasename string) {
 }
 
 // TODO: remove runcommand functionality from printCommandInfo, wrap runCommand
-// TODO: handle *command-line arguments*
-// TODO: no, really, ^^^^ that
 func runCommand(commandName string, args []string) {
 	// Note that at this point we should have already tested that this executable exists.
 	executable := filepath.Join(magicPath, magicPrefix+"-"+commandName)
 
 	if debug == true {
-		log.Println("Trying to run: ", executable)
+		log.Println("Trying to run: ", executable, "\n with args: ", strings.Join(args, " "))
 	}
 
-	cmd := exec.Command(executable)
+	// v- variadic syntax
+	cmd := exec.Command(executable, args...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
@@ -162,6 +161,7 @@ func main() {
 	// v- Package scope
 	magicPath = getMagicPath()
 	magicPrefix = path.Base(os.Args[0])
+	debug = true
 
 	numArgs := len(os.Args)
 
@@ -174,7 +174,7 @@ func main() {
 		if debug == true {
 			log.Println("Found runnable command: ", magicPath, magicPrefix, os.Args[1])
 		}
-		runCommand(os.Args[1], nil)
+		runCommand(os.Args[1], os.Args[2:])
 	} else {
 		panic("Unknown flags or options.")
 	}
